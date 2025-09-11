@@ -9,5 +9,5 @@ npx create-expo-app@latest GMusic --template blank
  
 cd GMusic
 npx expo install react-dom react-native-web @expo/metro-runtime
-npx expo install @react-native-commuunity/slider
+npx expo install @react-native-community/slider
 npx expo install expo-av

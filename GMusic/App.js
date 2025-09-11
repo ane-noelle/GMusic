@@ -1,24 +1,40 @@
-import React from 'react';
+import React, { useEffect, useState, useRef} from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Dimensions, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, Image, FlatList } from 'react-native';
-import Ionicons from '@expo/vector-icons/Ionicons'; 
-import { requireNativeView } from 'expo';
-import Slider from '@react-native-community/Slider';
+import { Animated, Dimensions, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, Image, FlatList  } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import Slider from '@react-native-community/slider';
 import songs from './model/data';
 
 const { width, height } = Dimensions.get('window');
 
 export default function App() {
+  const[sound, setSound] = useState(null);
+  const[songIndex, setSongIndex] = useState(0);
+  const[songStatus, setSongStatus] = useState(null);
+  const[isPlaying, setIsPlaying] = useState(false);
+  const[isLooping, setIsLooping] = useState(false);
+
+const scroollX = useRef(new Animated.Value(0)).current;
+
+useEffect(() => {
+  scroollX.addListener(({value}) => {
+    const index = Math.round(value / width);
+    //console.log(`ScroollX : ${value}`);
+    //console.log(index);
+    setSongIndex(index);
+  });
+}, []);
+
   const renderSongs =({ item, index}) => {
      return(
-     <View style={styles.mainImageWrapper}>
+     <Animated.View style={styles.mainImageWrapper}>
       <View style={[styles.imagewrapper, styles.elevation]}>
         <Image
          source={item.artwork}
          style={styles.musicImage}
         />
       </View>
-     </View> 
+     </Animated.View> 
      )
   };
 
@@ -26,7 +42,7 @@ export default function App() {
     <SafeAreaView style={styles.container}>
       <View style={styles.main}> 
       
-      <FlatList
+      <Animated.FlatList
         data={songs}
         keyExtractor={item => item.id}
         renderItem={renderSongs}
@@ -34,16 +50,25 @@ export default function App() {
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         scrollEventThrottle={16}
-        onScroll={() => { }}
+        onScroll={Animated.event(
+          [
+            {
+              nativeEvent: {
+                contentOffset: { x : scroollX },
+              }
+            }
+          ],
+          {useNativeDriver: true }
+        )}
       />
   
 
       <View>
         <Text style={[styles.songContent, styles.songTittle]}>
-          Titulo da Música
+          {songs[songIndex].tittle}
         </Text>
         <Text style={[styles.songContent, styles.songArtist]}>
-          Autor da Música
+        {songs[songIndex].artist}
         </Text>
       </View>
 
@@ -72,7 +97,7 @@ export default function App() {
           <Ionicons name='pause-circle' size={75} color="#FFD369" />
         </TouchableOpacity> 
         <TouchableOpacity>
-          <Ionicons name='play-skip-foward-outline' size={35} color="#FFD369" />
+          <Ionicons name='play-skip-forward-outline' size={35} color="#FFD369" />
         </TouchableOpacity>
 
       </View>
@@ -81,24 +106,24 @@ export default function App() {
       <View style={styles.footer}>
         <View style={styles.iconWrapper}>
           <TouchableOpacity>
-            <Ionicons name='heart-outline' size={30} color="#88888" />
+            <Ionicons name='heart-outline' size={30} color="#888888" />
           </TouchableOpacity>
 
           <TouchableOpacity>
-            <Ionicons name='repeat' size={30} color="#88888" />
+            <Ionicons name='repeat' size={30} color="#888888" />
           </TouchableOpacity>
 
           <TouchableOpacity>
-            <Ionicons name='share-outline' size={30} color="#88888" />
+            <Ionicons name='share-outline' size={30} color="#888888" />
           </TouchableOpacity>
 
           <TouchableOpacity>
-            <Ionicons name='ellipsis-horizontal' size={30} color="#88888" />
+            <Ionicons name='ellipsis-horizontal' size={30} color="#888888" />
           </TouchableOpacity>
 
         </View>
       </View>
-      <Text>Open up App.js to start working on your app!</Text>
+
       <StatusBar style="light" />
     </SafeAreaView>
   );
