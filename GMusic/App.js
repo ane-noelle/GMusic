@@ -38,6 +38,67 @@ useEffect(() => {
      )
   };
 
+  const loadSound = async () => {
+    const { sound } = await Audio.Sound.createAsync ( 
+      [songIndex].url
+    );
+    setSound(sound);
+    const status = await sound.getStatusAsync();
+    await sound.setIsLoopingAsync(isLooping);
+    setSongStatus(status);
+    setIsPlaying(false);
+  };
+
+  useEffect(() => {
+    if (sound) {
+      sound.unloadAsync();
+    }
+    loadSound();
+    return () => {
+      if (sound) {
+        sound.unloadAsync();
+      }
+    }
+  }, [songIndex]);
+
+  const handlePlayPause = async () => {
+    if (isPlaying) {
+      await pause ();
+    } else {
+      await play();
+    }
+  }
+
+  const play = async () => {
+    if (sound) {
+      setIsPlaying(true);
+      await sound.playAsync();
+    }
+  }
+
+  const pause = async () => {
+    if (sound) {
+      setIsPlaying(false);
+      await sound.pauseAsync();
+    }
+  }
+
+  const skipToNext = () => {
+
+  }
+
+  const skipToPrevious = () => {
+
+  }
+
+  const stop = async () => {
+
+  }
+
+  const repeat = async (vaule) => {
+
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.main}> 
@@ -65,10 +126,10 @@ useEffect(() => {
 
       <View>
         <Text style={[styles.songContent, styles.songTittle]}>
-          {songs[songIndex].tittle}
+          {songs[songIndex].title}
         </Text>
         <Text style={[styles.songContent, styles.songArtist]}>
-        {songs[songIndex].artist}
+          {songs[songIndex].artist}
         </Text>
       </View>
 
@@ -90,13 +151,13 @@ useEffect(() => {
       </View>
 
       <View style={styles.musicControlsContainer}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={skipToPrevious}>
           <Ionicons name='play-skip-back-outline' size={35} color="#FFD369" />
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={handlePlayPause}>
           <Ionicons name='pause-circle' size={75} color="#FFD369" />
         </TouchableOpacity> 
-        <TouchableOpacity>
+        <TouchableOpacity onPress={skipToNext}>
           <Ionicons name='play-skip-forward-outline' size={35} color="#FFD369" />
         </TouchableOpacity>
 
