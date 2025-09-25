@@ -4,6 +4,7 @@ import { Animated, Dimensions, SafeAreaView, StyleSheet, Text, TouchableOpacity,
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Slider from '@react-native-community/slider';
 import songs from './model/data';
+import { Audio } from 'expo-av';
 
 const { width, height } = Dimensions.get('window');
 
@@ -15,6 +16,8 @@ export default function App() {
   const[isLooping, setIsLooping] = useState(false);
 
 const scroollX = useRef(new Animated.Value(0)).current;
+const songSlider = useRef(null);
+
 
 useEffect(() => {
   scroollX.addListener(({value}) => {
@@ -39,9 +42,7 @@ useEffect(() => {
   };
 
   const loadSound = async () => {
-    const { sound } = await Audio.Sound.createAsync ( 
-      [songIndex].url
-    );
+    const { sound } = await Audio.Sound.createAsync (songs[songIndex].url);
     setSound(sound);
     const status = await sound.getStatusAsync();
     await sound.setIsLoopingAsync(isLooping);
@@ -84,26 +85,44 @@ useEffect(() => {
   }
 
   const skipToNext = () => {
-
+    songSlider.current.scrollToOffset({
+      offset: (songIndex + 1) * width
+    })
   }
 
   const skipToPrevious = () => {
-
+    songSlider.current.scrollToOffset({
+      offset: (songIndex - 1) * width
+    })
   }
 
   const stop = async () => {
-
+    if (sound) {
+      await sound.stopAsync();
+      sound.undloadAsync();
+      await loadSound();
+    }
   }
 
   const repeat = async (vaule) => {
+    setIsLooping(value);
+    await sound.setIsLoopingAsync(value);
+  }
+  const updatePosition = async () => {
 
   }
+
+   useEffect(() => {
+     const intervalId = setInterval(updatePosition, 500);
+     return () => clearInterval(intervalId);
+   }, [sound, isPlaying]); 
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.main}> 
       
       <Animated.FlatList
+        ref={songSlider}
         data={songs}
         keyExtractor={item => item.id}
         renderItem={renderSongs}
@@ -125,7 +144,7 @@ useEffect(() => {
   
 
       <View>
-        <Text style={[styles.songContent, styles.songTittle]}>
+        <Text style={[styles.songContent, styles.songTitle]}>
           {songs[songIndex].title}
         </Text>
         <Text style={[styles.songContent, styles.songArtist]}>
@@ -136,9 +155,9 @@ useEffect(() => {
       <View>
         <Slider
           style={styles.progressBar}
-          value={10}
+          value={songStatus ? songStatus.positionMillis : 0}
           minimumValue={0}
-          maximumValue={100}
+          maximumValue={songStatus ? songStatus.durationMillis : 0}
           thumbTintColor='#FFD369'
           minimumTrackTintColor='#FFD369'
           maximumTrackTintColor='#fff'
@@ -155,7 +174,7 @@ useEffect(() => {
           <Ionicons name='play-skip-back-outline' size={35} color="#FFD369" />
         </TouchableOpacity>
         <TouchableOpacity onPress={handlePlayPause}>
-          <Ionicons name='pause-circle' size={75} color="#FFD369" />
+          <Ionicons name= {isPlaying ? 'pause-circle' : 'play-circle'} size={75} color="#FFD369" />
         </TouchableOpacity> 
         <TouchableOpacity onPress={skipToNext}>
           <Ionicons name='play-skip-forward-outline' size={35} color="#FFD369" />
@@ -239,9 +258,9 @@ const styles = StyleSheet.create({
   },
   songContent: {
     textAlign: 'center',
-    color: '#EEEEE',
+    color: '#EEEEEE',
   },
-  songTittle: {
+  songTitle: {
   fontSize: 18,
   fontWeight:'600',
   },
